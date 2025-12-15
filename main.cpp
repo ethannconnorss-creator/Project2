@@ -6,6 +6,7 @@
  *          searching/sorting, formatted output, and file I/O.
  */
 
+
 //System Libraries
 #include <iostream>
 #include <iomanip>
@@ -70,7 +71,12 @@ int main() {
     getline(cin,nam);
 
     while(run){
-        cout<<"\n1) Deal\n2) Rules\n7) Quit\nPick: ";
+        cout<<"\n1) Deal";
+        cout<<"\n2) Rules";
+        cout<<"\n3) View Stats";
+        cout<<"\n4) Test Math";
+        cout<<"\n7) Quit";
+        cout<<"\nPick: ";  
         cin>>opt;
         cin.ignore(10000,'\n');
 
@@ -80,6 +86,35 @@ int main() {
         else if(opt==2){
             cout<<"Rules selected\n";
         }
+        else if(opt == 3){
+            cout << "\n--- Player Stats ---\n";
+            cout << "Name: " << nam << "\n";
+            cout << "Bank: $" << fixed << setprecision(2) << bank << "\n";
+
+            int cnt = 0;
+            for(int i = 0; i < 5; i++){
+                cnt++;
+               }
+               cout << "Rounds played: " << cnt << "\n";
+         }
+
+         else if(opt == 4){
+             cout << "\n--- Math Test ---\n";
+
+             float test = bank;
+             for(int i = 0; i < 5; i++){
+                 test = test * 1.05f;
+                 cout << "After step " << i+1 << ": $" 
+                      << fixed << setprecision(2) << test << "\n";
+             }
+
+               if(test > bank){
+                   cout << "Growth confirmed.\n";
+               } else {
+                   cout << "No growth.\n";
+               }
+           }
+
         else if(opt==7){
             run=false;
         }
@@ -89,7 +124,7 @@ int main() {
     return 0;
 }
 
-void mkDk(int val[],int sut[],int siz){
+void mkDk(int val[],int sut[],int siz){e
     int k=0;
     for(int s=0;s<4;s++){
         for(int v=1;v<=13;v++){
