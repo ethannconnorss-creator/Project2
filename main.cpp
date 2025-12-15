@@ -148,6 +148,61 @@ float outc(int pt,int dt,float bet,bool nat){
     return winm;
 }
 
+int linSr(string nm[],int siz,string key){
+    for(int i=0;i<siz;i++){
+        if(nm[i]==key) return i;
+    }
+    return -1;
+}
+
+int binSr(string nm[],float bnk[],int win[],int los[],
+          int siz,string key){
+    int lo=0, hi=siz-1;
+    while(lo<=hi){
+        int mid=(lo+hi)/2;
+        if(nm[mid]==key) return mid;
+        else if(nm[mid]<key) lo=mid+1;
+        else hi=mid-1;
+    }
+    return -1;
+}
+
+void selSt(string nm[],float bnk[],int win[],int los[],int siz){
+    for(int i=0;i<siz-1;i++){
+        int mx=i;
+        for(int j=i+1;j<siz;j++){
+            if(bnk[j]>bnk[mx]) mx=j;
+        }
+        if(mx!=i) swp2(nm,bnk,win,los,i,mx);
+    }
+}
+
+void bubSt(float bnk[],int gid[],int siz){
+    bool swp=true;
+    while(swp){
+        swp=false;
+        for(int i=0;i<siz-1;i++){
+            if(gid[i]>gid[i+1]){
+                swpF(bnk[i],bnk[i+1]);
+                swpI(gid[i],gid[i+1]);
+                swp=true;
+            }
+        }
+    }
+}
+
+void swpS(string &a,string &b){ string t=a; a=b; b=t; }
+void swpF(float &a,float &b){ float t=a; a=b; b=t; }
+void swpI(int &a,int &b){ int t=a; a=b; b=t; }
+
+void swp2(string nm[],float bnk[],int win[],int los[],int i,int j){
+    swpS(nm[i],nm[j]);
+    swpF(bnk[i],bnk[j]);
+    swpI(win[i],win[j]);
+    swpI(los[i],los[j]);
+}
+
+
 
 
 
