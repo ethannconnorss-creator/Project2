@@ -108,4 +108,46 @@ int ptsH(int hand[][12],int idx,int cnt){
     return sum;
 }
 
+char gtAct(){
+    cout<<"(H)it or (S)tand: ";
+    string ln;
+    getline(cin,ln);
+    return (ln.size()>0)?toupper(ln[0]):'S';
+}
+
+int plyr(int hand[][12],int &pcnt){
+    int pt=ptsH(hand,0,pcnt);
+    char act='H';
+    while(act!='S' && pt<21){
+        act=gtAct();
+        if(act=='H'){
+            hand[0][pcnt]=(rand()%13)+1;
+            pcnt++;
+            pt=ptsH(hand,0,pcnt);
+        }
+    }
+    return pt;
+}
+
+int dler(int hand[][12],int &dcnt){
+    int dt=ptsH(hand,1,dcnt);
+    while(dt<17){
+        hand[1][dcnt]=(rand()%13)+1;
+        dcnt++;
+        dt=ptsH(hand,1,dcnt);
+    }
+    return dt;
+}
+
+float outc(int pt,int dt,float bet,bool nat){
+    float winm=0.0f;
+    if(pt>21) winm=-bet;
+    else if(dt>21 || pt>dt) winm=bet;
+    else if(pt<dt) winm=-bet;
+    if(nat && winm>0) winm*=1.5f;
+    return winm;
+}
+
+
+
 
