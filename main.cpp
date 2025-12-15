@@ -89,3 +89,23 @@ int main() {
     return 0;
 }
 
+void mkDk(int val[],int sut[],int siz){
+    int k=0;
+    for(int s=0;s<4;s++){
+        for(int v=1;v<=13;v++){
+            val[k]=v;
+            sut[k]=s;
+            k++;
+        }
+    }
+}
+
+int ptsH(int hand[][12],int idx,int cnt){
+    int sum=0;
+    for(int i=0;i<cnt;i++){
+        sum+=hand[idx][i];
+    }
+    return sum;
+}
+
+
