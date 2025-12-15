@@ -55,8 +55,37 @@ void  prnLb(string nm[],float bnk[],int win[],int los[],int siz);
 int   fndPl(string nm[],int siz,string key);
 void  clrIn();
 
-int main(int argc, char** argv) {
-    cout << "Blackjack - Project 2\n";
-    cout << "Skeleton build\n";
+int main() {
+    const float MINB = 1.0f;
+
+    srand(static_cast<unsigned int>(time(0)));
+
+    float bank=0.0f;
+    int opt=0, gid=0;
+    bool run=true;
+    string nam="Player";
+
+    cout<<"Blackjack - Project 2\n";
+    cout<<"Enter name: ";
+    getline(cin,nam);
+
+    while(run){
+        cout<<"\n1) Deal\n2) Rules\n7) Quit\nPick: ";
+        cin>>opt;
+        cin.ignore(10000,'\n');
+
+        if(opt==1){
+            cout<<"Deal selected\n";
+        }
+        else if(opt==2){
+            cout<<"Rules selected\n";
+        }
+        else if(opt==7){
+            run=false;
+        }
+    }
+
+    cout<<"Bye\n";
     return 0;
 }
+
