@@ -6,11 +6,9 @@
  *          searching/sorting, formatted output, and file I/O.
  */
 
-
 //System Libraries
 #include <iostream>
 #include <iomanip>
-#include <cmath>
 #include <cstdlib>
 #include <fstream>
 #include <string>
@@ -19,251 +17,321 @@
 
 using namespace std;
 
-//Function Prototypes
-bool  rdFil(string fnm,float &bank,int &gid);
-void  wrFil(string fnm,float bank,int gid);
-void  prnMn(float bank);
-int   gtInt(int minv,int maxv);
+//Prototypes (names <= 7 chars)
+bool  rdFil(string fnm,float &bank);
+void  wrFil(string fnm,float bank);
+void  prnMn(float bank,string nam);
+int   gtInt(int lo,int hi);
 float gtBet(float bank,float minb=1.0f);
-int   gId();
-
-void  mkDk(int val[],int sut[],int siz);
-void  shuf(int val[],int sut[],int siz);
-void  deal(int val[],int sut[],int siz,int &top,int hand[][12],
-           int idx,int &cnt);
-int   ptsH(int hand[][12],int idx,int cnt);
-void  prnH(int hand[][12],int idx,int cnt,bool hid=true);
-char  gtAct();
-int   plyr(int hand[][12],int &pcnt);
-int   dler(int hand[][12],int &dcnt);
-float outc(int pt,int dt,float bet,bool nat);
-
-void  addLg(ofstream &lg,string nam,float bet,int pt,int dt,
-            float win,float bank);
-
-int   linSr(string nm[],int siz,string key);
-int   binSr(string nm[],float bnk[],int win[],int los[],
-            int siz,string key);
-void  selSt(string nm[],float bnk[],int win[],int los[],int siz);
-void  bubSt(float bnk[],int gid[],int siz);
-
-void  swpS(string &a,string &b);
-void  swpF(float &a,float &b);
-void  swpI(int &a,int &b);
-void  swp2(string nm[],float bnk[],int win[],int los[],int i,int j);
-
-void  prnLb(string nm[],float bnk[],int win[],int los[],int siz);
-int   fndPl(string nm[],int siz,string key);
 void  clrIn();
 
-int main() {
-    const float MINB = 1.0f;
+void  mkDk(int val[],int siz);
+void  shuf(int val[],int siz);
+int   draw(int val[],int siz,int &top);
 
-    srand(static_cast<unsigned int>(time(0)));
+int   ptsH(int hnd[][12],int idx,int cnt);
+void  prnH(int hnd[][12],int idx,int cnt,bool hid);
+
+int   plyr(int hnd[][12],int &pcnt,int val[],int siz,int &top);
+int   dler(int hnd[][12],int &dcnt,int val[],int siz,int &top);
+float outc(int pt,int dt,float bet,bool nat);
+
+void  logRd(ofstream &f,string nam,float bet,int pt,int dt,float win,float bank);
+
+//======================== MAIN ========================
+int main(){
+    srand((unsigned)time(0));
+
+    const float MINB=1.0f;
+    const int   DK=52;
 
     float bank=0.0f;
-    int opt=0, gid=0;
-    bool run=true;
     string nam="Player";
+    int opt=0;
+    bool run=true;
+
+    rdFil("bank.txt",bank);
+    if(bank<MINB) bank=100.0f;
 
     cout<<"Blackjack - Project 2\n";
     cout<<"Enter name: ";
     getline(cin,nam);
+    if(nam.size()==0) nam="Player";
+
+    ofstream lg("log.txt",ios::app);
 
     while(run){
-        cout<<"\n1) Deal";
-        cout<<"\n2) Rules";
-        cout<<"\n3) View Stats";
-        cout<<"\n4) Test Math";
-        cout<<"\n7) Quit";
-        cout<<"\nPick: ";  
-        cin>>opt;
-        cin.ignore(10000,'\n');
+        prnMn(bank,nam);
+        opt=gtInt(1,3);
 
         if(opt==1){
-            cout<<"Deal selected\n";
+            if(bank<MINB){
+                cout<<"Bank too low to bet.\n";
+                continue;
+            }
+
+            float bet=gtBet(bank,MINB);
+
+            //Deck (1D array)
+            int val[DK];
+            mkDk(val,DK);
+            shuf(val,DK);
+            int top=0;
+
+            //Hands (2D array)
+            int hnd[2][12];
+            for(int r=0;r<2;r++){
+                for(int c=0;c<12;c++){
+                    hnd[r][c]=0;
+                }
+            }
+
+            int pcnt=0, dcnt=0;
+
+            //Deal 2 each
+            hnd[0][pcnt++]=draw(val,DK,top);
+            hnd[1][dcnt++]=draw(val,DK,top);
+            hnd[0][pcnt++]=draw(val,DK,top);
+            hnd[1][dcnt++]=draw(val,DK,top);
+
+            int pt=ptsH(hnd,0,pcnt);
+            int dt=ptsH(hnd,1,dcnt);
+
+            bool nat=(pcnt==2 && pt==21);
+
+            cout<<"\n"<<nam<<" ";
+            prnH(hnd,0,pcnt,false);
+            cout<<" tot="<<pt<<"\n";
+
+            cout<<"Dealer ";
+            prnH(hnd,1,dcnt,true);
+            cout<<"\n";
+
+            //Player turn
+            pt=plyr(hnd,pcnt,val,DK,top);
+
+            //Dealer turn only if player not bust
+            if(pt<=21){
+                cout<<"\nDealer ";
+                prnH(hnd,1,dcnt,false);
+                dt=ptsH(hnd,1,dcnt);
+                cout<<" tot="<<dt<<"\n";
+
+                dt=dler(hnd,dcnt,val,DK,top);
+            }
+
+            //Final show
+            dt=ptsH(hnd,1,dcnt);
+
+            cout<<"\nFINAL\n";
+            cout<<nam<<" ";
+            prnH(hnd,0,pcnt,false);
+            pt=ptsH(hnd,0,pcnt);
+            cout<<" tot="<<pt<<"\n";
+
+            cout<<"Dealer ";
+            prnH(hnd,1,dcnt,false);
+            cout<<" tot="<<dt<<"\n";
+
+            float win=outc(pt,dt,bet,nat);
+            bank+=win;
+
+            if(win>0) cout<<"You win $"<<fixed<<setprecision(2)<<win<<"\n";
+            else if(win<0) cout<<"You lose $"<<fixed<<setprecision(2)<<-win<<"\n";
+            else cout<<"Push.\n";
+
+            cout<<"Bank now: $"<<fixed<<setprecision(2)<<bank<<"\n";
+
+            logRd(lg,nam,bet,pt,dt,win,bank);
         }
         else if(opt==2){
-            cout<<"Rules selected\n";
+            cout<<"\nRULES:\n";
+            cout<<"- Try to reach 21 without going over.\n";
+            cout<<"- Face cards count as 10.\n";
+            cout<<"- Ace counts as 11 then drops to 1 if needed.\n";
+            cout<<"- Dealer hits until 17+.\n\n";
         }
-        else if(opt == 3){
-            cout << "\n--- Player Stats ---\n";
-            cout << "Name: " << nam << "\n";
-            cout << "Bank: $" << fixed << setprecision(2) << bank << "\n";
-
-            int cnt = 0;
-            for(int i = 0; i < 5; i++){
-                cnt++;
-               }
-               cout << "Rounds played: " << cnt << "\n";
-         }
-
-         else if(opt == 4){
-             cout << "\n--- Math Test ---\n";
-
-             float test = bank;
-             for(int i = 0; i < 5; i++){
-                 test = test * 1.05f;
-                 cout << "After step " << i+1 << ": $" 
-                      << fixed << setprecision(2) << test << "\n";
-             }
-
-               if(test > bank){
-                   cout << "Growth confirmed.\n";
-               } else {
-                   cout << "No growth.\n";
-               }
-           }
-
-        else if(opt==7){
+        else if(opt==3){
             run=false;
         }
     }
 
-    cout<<"Bye\n";
+    wrFil("bank.txt",bank);
+    lg.close();
+    cout<<"Saved. Bye!\n";
     return 0;
 }
 
-void mkDk(int val[],int sut[],int siz){e
+//======================== I/O ========================
+bool rdFil(string fnm,float &bank){
+    ifstream fin(fnm.c_str());
+    if(!fin){
+        bank=100.0f;
+        return false;
+    }
+    fin>>bank;
+    if(!fin) bank=100.0f;
+    fin.close();
+    return true;
+}
+
+void wrFil(string fnm,float bank){
+    ofstream fout(fnm.c_str());
+    fout<<fixed<<setprecision(2)<<bank<<"\n";
+    fout.close();
+}
+
+void prnMn(float bank,string nam){
+    cout<<"\n=====================\n";
+    cout<<"Player: "<<nam<<"\n";
+    cout<<"Bank: $"<<fixed<<setprecision(2)<<bank<<"\n";
+    cout<<"1) Deal\n";
+    cout<<"2) Rules\n";
+    cout<<"3) Save & Quit\n";
+    cout<<"Pick: ";
+}
+
+int gtInt(int lo,int hi){
+    int x;
+    cin>>x;
+    while(!cin || x<lo || x>hi){
+        clrIn();
+        cout<<"Enter "<<lo<<"-"<<hi<<": ";
+        cin>>x;
+    }
+    clrIn();
+    return x;
+}
+
+float gtBet(float bank,float minb){
+    float b;
+    cout<<"Bet (min "<<fixed<<setprecision(2)<<minb<<"): ";
+    cin>>b;
+    while(!cin || b<minb || b>bank){
+        clrIn();
+        cout<<"Bet must be "<<minb<<" to "<<bank<<": ";
+        cin>>b;
+    }
+    clrIn();
+    return b;
+}
+
+void clrIn(){
+    cin.clear();
+    cin.ignore(10000,'\n');
+}
+
+//======================== DECK ========================
+void mkDk(int val[],int siz){
     int k=0;
     for(int s=0;s<4;s++){
         for(int v=1;v<=13;v++){
-            val[k]=v;
-            sut[k]=s;
+            int c=v;
+            if(c==1) c=11;       //Ace
+            else if(c>=10) c=10; //10,J,Q,K
+            val[k]=c;
             k++;
         }
     }
 }
 
-int ptsH(int hand[][12],int idx,int cnt){
-    int sum=0;
+void shuf(int val[],int siz){
+    for(int i=siz-1;i>0;i--){
+        int j=rand()%(i+1);
+        int t=val[i];
+        val[i]=val[j];
+        val[j]=t;
+    }
+}
+
+int draw(int val[],int siz,int &top){
+    if(top>=siz) top=0;
+    int c=val[top];
+    top++;
+    return c;
+}
+
+//======================== HANDS ========================
+int ptsH(int hnd[][12],int idx,int cnt){
+    int sum=0, ac=0;
     for(int i=0;i<cnt;i++){
-        sum+=hand[idx][i];
+        int v=hnd[idx][i];
+        sum+=v;
+        if(v==11) ac++;
+    }
+    while(sum>21 && ac>0){
+        sum-=10;
+        ac--;
     }
     return sum;
 }
 
-char gtAct(){
-    cout<<"(H)it or (S)tand: ";
-    string ln;
-    getline(cin,ln);
-    return (ln.size()>0)?toupper(ln[0]):'S';
+void prnH(int hnd[][12],int idx,int cnt,bool hid){
+    cout<<"[";
+    for(int i=0;i<cnt;i++){
+        if(hid && idx==1 && i==1) cout<<"?";
+        else cout<<hnd[idx][i];
+        if(i<cnt-1) cout<<",";
+    }
+    cout<<"]";
 }
 
-int plyr(int hand[][12],int &pcnt){
-    int pt=ptsH(hand,0,pcnt);
-    char act='H';
-    while(act!='S' && pt<21){
-        act=gtAct();
-        if(act=='H'){
-            hand[0][pcnt]=(rand()%13)+1;
-            pcnt++;
-            pt=ptsH(hand,0,pcnt);
+//======================== TURNS ========================
+int plyr(int hnd[][12],int &pcnt,int val[],int siz,int &top){
+    int pt=ptsH(hnd,0,pcnt);
+
+    while(pt<21){
+        cout<<"(H)it or (S)tand: ";
+        string ln;
+        getline(cin,ln);
+        char a=(ln.size()>0)?toupper(ln[0]):'S';
+
+        if(a=='H'){
+            if(pcnt<12){
+                hnd[0][pcnt++]=draw(val,siz,top);
+                pt=ptsH(hnd,0,pcnt);
+                cout<<"You ";
+                prnH(hnd,0,pcnt,false);
+                cout<<" tot="<<pt<<"\n";
+            }else{
+                break;
+            }
+        }else{
+            break;
         }
     }
     return pt;
 }
 
-int dler(int hand[][12],int &dcnt){
-    int dt=ptsH(hand,1,dcnt);
-    while(dt<17){
-        hand[1][dcnt]=(rand()%13)+1;
-        dcnt++;
-        dt=ptsH(hand,1,dcnt);
+int dler(int hnd[][12],int &dcnt,int val[],int siz,int &top){
+    int dt=ptsH(hnd,1,dcnt);
+    while(dt<17 && dcnt<12){
+        hnd[1][dcnt++]=draw(val,siz,top);
+        dt=ptsH(hnd,1,dcnt);
+        cout<<"Dealer ";
+        prnH(hnd,1,dcnt,false);
+        cout<<" tot="<<dt<<"\n";
     }
     return dt;
 }
 
+//======================== RESULT ========================
 float outc(int pt,int dt,float bet,bool nat){
-    float winm=0.0f;
-    if(pt>21) winm=-bet;
-    else if(dt>21 || pt>dt) winm=bet;
-    else if(pt<dt) winm=-bet;
-    if(nat && winm>0) winm*=1.5f;
-    return winm;
+    float win=0.0f;
+
+    if(pt>21) win=-bet;
+    else if(dt>21) win=bet;
+    else if(pt>dt) win=bet;
+    else if(pt<dt) win=-bet;
+    else win=0.0f;
+
+    if(nat && win>0.0f) win=win*1.5f;
+    return win;
 }
 
-int linSr(string nm[],int siz,string key){
-    for(int i=0;i<siz;i++){
-        if(nm[i]==key) return i;
-    }
-    return -1;
+void logRd(ofstream &f,string nam,float bet,int pt,int dt,float win,float bank){
+    f<<nam<<" bet="<<fixed<<setprecision(2)<<bet
+     <<" pt="<<pt<<" dt="<<dt
+     <<" win="<<fixed<<setprecision(2)<<win
+     <<" bank="<<fixed<<setprecision(2)<<bank<<"\n";
 }
-
-int binSr(string nm[],float bnk[],int win[],int los[],
-          int siz,string key){
-    int lo=0, hi=siz-1;
-    while(lo<=hi){
-        int mid=(lo+hi)/2;
-        if(nm[mid]==key) return mid;
-        else if(nm[mid]<key) lo=mid+1;
-        else hi=mid-1;
-    }
-    return -1;
-}
-
-void selSt(string nm[],float bnk[],int win[],int los[],int siz){
-    for(int i=0;i<siz-1;i++){
-        int mx=i;
-        for(int j=i+1;j<siz;j++){
-            if(bnk[j]>bnk[mx]) mx=j;
-        }
-        if(mx!=i) swp2(nm,bnk,win,los,i,mx);
-    }
-}
-
-void bubSt(float bnk[],int gid[],int siz){
-    bool swp=true;
-    while(swp){
-        swp=false;
-        for(int i=0;i<siz-1;i++){
-            if(gid[i]>gid[i+1]){
-                swpF(bnk[i],bnk[i+1]);
-                swpI(gid[i],gid[i+1]);
-                swp=true;
-            }
-        }
-    }
-}
-
-void swpS(string &a,string &b){ string t=a; a=b; b=t; }
-void swpF(float &a,float &b){ float t=a; a=b; b=t; }
-void swpI(int &a,int &b){ int t=a; a=b; b=t; }
-
-void swp2(string nm[],float bnk[],int win[],int los[],int i,int j){
-    swpS(nm[i],nm[j]);
-    swpF(bnk[i],bnk[j]);
-    swpI(win[i],win[j]);
-    swpI(los[i],los[j]);
-}
-
-/********************************************************************
-* I made sure my project included
- *
- * 1. Modular program design using functions and prototypes.
- * 2. Passing arguments by value and by reference.
- * 3. Use of default parameters in function calls.
- * 4. Returning primitive data types and boolean values from functions.
- * 5. Use of static variables for persistent state tracking.
- * 6. Overloaded functions to swap different data types.
- * 7. One-dimensional arrays to represent a deck of cards.
- * 8. Parallel arrays to store leaderboard information.
- * 9. Two-dimensional arrays to represent player and dealer hands.
- * 10. Passing arrays to and from functions.
- * 11. Selection sort and bubble sort algorithms.
- * 12. Linear and binary search algorithms.
- * 13. File input and output for persistent data storage.
- * 14. Input validation and formatted output.
- *
- * Program Flow Summary:
- * - Load saved data from files.
- * - Display a menu to the user.
- * - Allow the user to play Blackjack against a dealer.
- * - Update bankroll and statistics.
- * - Save all data before exiting.
- 
-
-********************************************************************/
-
-
-
