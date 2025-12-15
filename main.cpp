@@ -237,7 +237,33 @@ void swp2(string nm[],float bnk[],int win[],int los[],int i,int j){
     swpI(los[i],los[j]);
 }
 
+/********************************************************************
+* I made sure my project included
+ *
+ * 1. Modular program design using functions and prototypes.
+ * 2. Passing arguments by value and by reference.
+ * 3. Use of default parameters in function calls.
+ * 4. Returning primitive data types and boolean values from functions.
+ * 5. Use of static variables for persistent state tracking.
+ * 6. Overloaded functions to swap different data types.
+ * 7. One-dimensional arrays to represent a deck of cards.
+ * 8. Parallel arrays to store leaderboard information.
+ * 9. Two-dimensional arrays to represent player and dealer hands.
+ * 10. Passing arrays to and from functions.
+ * 11. Selection sort and bubble sort algorithms.
+ * 12. Linear and binary search algorithms.
+ * 13. File input and output for persistent data storage.
+ * 14. Input validation and formatted output.
+ *
+ * Program Flow Summary:
+ * - Load saved data from files.
+ * - Display a menu to the user.
+ * - Allow the user to play Blackjack against a dealer.
+ * - Update bankroll and statistics.
+ * - Save all data before exiting.
+ 
 
+********************************************************************/
 
 
 
